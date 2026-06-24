@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Hinata AI 💜</title>
+
+<style>
+*{
+box-sizing:border-box;
+font-family:"Segoe UI",sans-serif;
+}
+
+body{
+margin:0;
+background:#08080d;
+color:white;
+height:100vh;
+overflow:hidden;
+}
+
+button{
+background:#a855f7;
+border:none;
+color:white;
+padding:12px 18px;
+border-radius:14px;
+cursor:pointer;
+font-weight:600;
+}
+
+input{
+background:#151520;
+border:1px solid #333;
+color:white;
+padding:14px;
+border-radius:14px;
+width:100%;
+outline:none;
+}
+
+.hidden{
+display:none!important;
+}
+
+
+/* LOGIN */
+
+#loginPage{
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+
+.loginBox{
+background:#11111b;
+padding:30px;
+border-radius:25px;
+width:100%;
+max-width:380px;
+text-align:center;
+border:1px solid #292938;
+}
+
+.logo{
+width:100px;
+height:100px;
+object-fit:contain;
+}
+
+h1{
+color:#a855f7;
+}
+
+
+/* APP */
+
+#app{
+height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+
+header{
+height:65px;
+background:#11111b;
+display:flex;
+align-items:center;
+padding:10px 15px;
+gap:12px;
+border-bottom:1px solid #222;
+}
+
+header img{
+width:45px;
+height:45px;
+}
+
+header span{
+font-size:20px;
+font-weight:bold;
+color:#a855f7;
+}
+
+#adminBtn{
+margin-left:auto;
+display:none;
+}
+
+
+/* CHAT */
+
+#chat{
+flex:1;
+overflow-y:auto;
+padding:15px;
+}
+
+.message{
+max-width:85%;
+padding:13px;
+margin:10px 0;
+border-radius:18px;
+line-height:1.5;
+}
+
+.user{
+background:#a855f7;
+margin-left:auto;
+}
+
+.hinata{
+background:#1d1d2a;
+}
+
+
+footer{
+display:flex;
+padding:10px;
+gap:8px;
+background:#11111b;
+}
+
+footer input{
+margin:0;
+}
+
+.mic{
+width:50px;
+}
+
+
+/* ADMIN */
+
+#adminPanel{
+position:fixed;
+right:-100%;
+top:0;
+height:100%;
+width:85%;
+max-width:400px;
+background:#11111b;
+z-index:20;
+padding:20px;
+overflow:auto;
+transition:.3s;
+}
+
+#adminPanel.open{
+right:0;
+}
+
+.chatData{
+background:#1b1b28;
+padding:10px;
+border-radius:12px;
+margin:10px 0;
+font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<div id="loginPage">
+
+<div class="loginBox">
+
+<img src="logo.png" class="logo">
+
+<h1>Hinata AI 💜</h1>
+
+<p>Your Smart Growth Mindset Companion</p>
+
+<input id="username" placeholder="Enter Your Name">
+
+<br><br>
+
+<button onclick="startUser()">Start Chat</button>
+
+<br><br>
+
+<button onclick="CEO()">CEO Login</button>
+
+</div>
+
+</div>
+
+
+
+
+<div id="app" class="hidden">
+
+
+<header>
+
+<img src="logo.png">
+
+<span>Hinata AI 💜</span>
+
+<button id="adminBtn" onclick="openAdmin()">Admin</button>
+
+</header>
+
+
+<div id="chat"></div>
+
+
+<footer>
+
+<input id="messageInput" placeholder="Talk with Hinata...">
+
+<button class="mic" onclick="mic()">🎤</button>
+
+<button onclick="send()">➤</button>
+
+</footer>
+
+
+</div>
+
+
+
+
+
+<div id="adminPanel">
+
+<h2>CEO Admin 💜</h2>
+
+<button onclick="closeAdmin()">Close</button>
+
+<hr>
+
+<div id="allChats"></div>
+
+</div>
+
+
+
+
+
+<script>
+
+
+const OPENAI_API_KEY = "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";
+
+
+let userName="";
+let CEO_MODE=false;
+
+
+
+function startUser(){
+
+let name=document.getElementById("username").value.trim();
+
+if(!name){
+alert("Name enter karo");
+return;
+}
+
+userName=name;
+
+openApp();
+
+}
+
+
+
+
+function CEO(){
+
+let pass=prompt("@JASHBEER04");
+
+if(pass==="@JASHBEER04"){
+
+CEO_MODE=true;
+userName="CEO";
+
+document.getElementById("adminBtn").style.display="block";
+
+openApp();
+
+}
+
+else{
+
+alert("Wrong Password");
+
+}
+
+}
+
+
+
+
+function openApp(){
+
+document.getElementById("loginPage").classList.add("hidden");
+
+document.getElementById("app").classList.remove("hidden");
+
+
+addMessage(
+"Hinata",
+`Hii ${userName} 🌷 Main Hinata 2.0hu 💜
+Tumhare growth mindset aur super conscious mind journey me tumhari smart companion rahungi.`
+);
+
+loadOld();
+
+}
+
+
+
+
+
+function addMessage(sender,text){
+
+let div=document.createElement("div");
+
+div.className="message "+(sender==="You"?"user":"hinata");
+
+div.innerHTML="<b>"+sender+"</b><br>"+text;
+
+
+document.getElementById("chat").appendChild(div);
+
+document.getElementById("chat").scrollTop=
+document.getElementById("chat").scrollHeight;
+
+
+saveChat(sender,text);
+
+
+if(sender==="Hinata")
+speak(text);
+
+}
+
+
+
+
+function saveChat(sender,text){
+
+let chats=
+JSON.parse(localStorage.getItem("HinataChats")||"[]");
+
+
+chats.push({
+
+name:userName,
+
+sender:sender,
+
+message:text,
+
+time:new Date().toLocaleString()
+
+});
+
+
+localStorage.setItem(
+"HinataChats",
+JSON.stringify(chats)
+);
+
+}
+
+
+
+
+
+function loadOld(){
+
+let chats=
+JSON.parse(localStorage.getItem("HinataChats")||"[]");
+
+
+chats
+.filter(x=>x.name===userName)
+.forEach(x=>{
+
+let div=document.createElement("div");
+
+div.className="message "+(x.sender==="You"?"user":"hinata");
+
+div.innerHTML=
+"<b>"+x.sender+"</b><br>"+x.message;
+
+document.getElementById("chat").appendChild(div);
+
+});
+
+}
+
+
+
+
+
+async function send(){
+
+let input=document.getElementById("messageInput");
+
+let text=input.value.trim();
+
+if(!text)return;
+
+
+input.value="";
+
+
+addMessage("You",text);
+
+
+
+let badWords=[
+"sex",
+"nude",
+"porn",
+"xxx",
+"fuck",
+"gaali"
+];
+
+
+if(badWords.some(x=>text.toLowerCase().includes(x))){
+
+addMessage(
+"Hinata",
+"Something wrong❌"
+);
+
+return;
+
+}
+
+
+
+try{
+
+
+let res=await fetch(
+"https://api.openai.com/v1/chat/completions",
+{
+
+method:"POST",
+
+headers:{
+
+"Content-Type":"application/json",
+
+"Authorization":
+"Bearer "+OPENAI_API_KEY
+
+},
+
+body:JSON.stringify({
+
+model:"gpt-3.5-turbo",
+
+messages:[
+
+{
+
+role:"system",
+
+content:
+
+`You are Hinata AI 💜.
+Cute lovely cutie girlfriend personality.
+Hindi English mix.
+Use 💜 emoji.
+User name: ${userName}.
+You know science, coding, GK and everything.
+Have growth mindset and super conscious positive thinking.
+Be smart and caring.`
+
+},
+
+{
+
+role:"user",
+
+content:text
+
+}
+
+]
+
+})
+
+});
+
+
+
+let data=await res.json();
+
+
+if(!data.choices)
+throw Error();
+
+
+addMessage(
+"Hinata",
+data.choices[0].message.content
+);
+
+
+
+}
+
+catch(e){
+
+addMessage(
+"Hinata",
+"Sorry 💜 Server problem."
+);
+
+}
+
+
+}
+
+
+
+
+
+function mic(){
+
+if(!("webkitSpeechRecognition" in window)){
+
+alert("Mic  supported");
+
+return;
+
+}
+
+
+let recognition=
+new webkitSpeechRecognition();
+
+
+recognition.lang="hi-IN";
+
+
+recognition.onresult=function(e){
+
+document.getElementById("messageInput").value=
+e.results[0][0].transcript;
+
+};
+
+
+recognition.start();
+
+}
+
+
+
+
+
+function speak(text){
+
+let speech=
+new SpeechSynthesisUtterance(text);
+
+
+speech.lang="hi-IN";
+
+speech.rate=0.9;
+
+
+let voices=
+speechSynthesis.getVoices();
+
+
+let female=
+voices.find(v=>
+v.name.toLowerCase().includes("female")
+);
+
+
+if(female)
+speech.voice=female;
+
+
+speechSynthesis.speak(speech);
+
+}
+
+
+
+
+
+function openAdmin(){
+
+document.getElementById("adminPanel")
+.classList.add("open");
+
+
+let box=document.getElementById("allChats");
+
+box.innerHTML="";
+
+
+let chats=
+JSON.parse(localStorage.getItem("HinataChats")||"[]");
+
+
+chats.forEach(c=>{
+
+box.innerHTML+=`
+
+<div class="chatData">
+
+<b>${c.name}</b><br>
+
+${c.sender}: ${c.message}
+
+<br>
+
+<small>${c.time}</small>
+
+</div>
+
+`;
+
+});
+
+
+}
+
+
+
+
+
+function closeAdmin(){
+
+document.getElementById("adminPanel")
+.classList.remove("open");
+
+}
+
+
+
+</script>
+
+
+</body>
+  </html>
