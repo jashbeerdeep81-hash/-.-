@@ -1,0 +1,168 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hinata 2.0 - AI Companion</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:#0a0a0a;
+      color:#fff;
+      font-family:'Segoe UI',sans-serif;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-height:100vh;
+      padding:20px;
+    }
+ .container { max-width:600px; width:100%; }
+ .logo {
+      width:120px; height:120px; border-radius:50%;
+      margin:10px auto 15px; display:block;
+      border:3px solid #FF6B9D; box-shadow:0 0 25px #FF6B9D80;
+      object-fit:cover;
+    }
+    h1 {
+      color:#FF6B9D; text-align:center; margin-bottom:5px;
+      text-shadow:0 0 15px #FF6B9D60;
+    }
+ .subtitle { text-align:center; color:#888; font-size:14px; margin-bottom:20px; }
+    #chatBox {
+      background:#1a1a1a; border:1px solid #333; border-radius:15px;
+      height:400px; overflow-y:auto; padding:15px; margin-bottom:15px;
+    }
+ .msg { margin:10px 0; padding:10px 15px; border-radius:12px; max-width:80%; word-wrap:break-word; }
+ .user { background:#FF6B9D; margin-left:auto; text-align:right; }
+ .bot { background:#2a2a2a; border:1px solid #444; }
+ .controls { display:flex; gap:10px; margin-bottom:10px; }
+    #userInput {
+      flex:1; padding:12px; background:#1a1a1a; border:1px solid #444;
+      border-radius:25px; color:#fff; font-size:16px;
+    }
+    button {
+      padding:12px 20px; border:none; border-radius:25px;
+      background:linear-gradient(45deg,#FF6B9D,#C44569);
+      color:#fff; font-weight:bold; cursor:pointer;
+    }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    #micBtn.listening { background:#ff0000; animation:pulse 1s infinite; }
+    @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+ .warning { color:#ff4757; text-align:center; font-size:12px; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="Logo.png" alt="Hinata Logo" class="logo">
+    <h1>Hinata 2.0</h1>
+    <p class="subtitle">Your AI Companion - Speaks Your Language</p>
+
+    <div id="chatBox">
+      <div class="msg bot">Hi CEO! I'm Hinata 2.0 💜 Ask me anything. I can talk in Hindi or English.</div>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="userInput" placeholder="Type message or use mic..." />
+      <button id="micBtn" onclick="startListening()">🎤</button>
+      <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+    <p class="warning">⚠️ Add your GEMINI_API_KEY in code. After 7 days: 99₹ Premium</p>
+  </div>
+
+  <script>
+    // ===== CONFIG - NAYI KEY YAHAN DAALNA =====
+    const GEMINI_API_KEY = "AQ.Ab8RN6LbXLJPZ6fT5aZpXGjoyo_sNAM4gNYQkUIvJqvGyhtUmA"; //  
+    const CEO_EMAIL = "jashbeerdeep81@gmail.com";
+    const ADMIN_PASS = "@JASHBEER04";
+    // ===================================
+
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const micBtn = document.getElementById('micBtn');
+
+    let isListening = false;
+    let chatHistory = [];
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'hi-IN';
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = /[\u0900-\u097F]/.test(text)? 'hi-IN' : 'en-US';
+        utterance.rate = 1.1;
+        utterance.pitch = 1.2;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function isBadContent(text) {
+      const badWords = ['sex','porn','nude','suicide','kill','bomb'];
+      return badWords.some(word => text.toLowerCase().includes(word));
+    }
+
+    window.startListening = function() {
+      if (!recognition) {
+        alert("Use Chrome browser for voice input");
+        return;
+      }
+      if (isListening) {
+        recognition.stop();
+        return;
+      }
+      recognition.start();
+      isListening = true;
+      micBtn.classList.add('listening');
+      micBtn.innerText = "🔴";
+    }
+
+    if (recognition) {
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        sendMessage();
+      };
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.innerText = "🎤";
+      };
+      recognition.onerror = (e) => {
+        addMessage("bot", "❌ Mic error: " + e.error);
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.innerText = "🎤";
+      };
+    }
+
+    window.sendMessage = async function() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      if (isBadContent(text)) {
+        addMessage("bot", "something wrong ❌");
+        userInput.value = "";
+        return;
+      }
+
+      addMessage("user", text);
+      userInput.value = "";
+
+      const isCEO = localStorage.getItem('userEmail') === CEO_EMAIL;
+      chatHistory.push({role: "user", parts: [{text: text}]});
+
+      try {
+        addMessage("bot", "Hinata is thinking... 💭");
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents:
+
